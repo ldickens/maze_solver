@@ -182,15 +182,23 @@ class Maze():
         if i == self.num_rows and j == self.num_cols:
             return
         to_visit = []
-        # for x in range(j-1, j+2):
-        #     if -1 < j > self.num_cols + 1:
-        #         if self._cells[x][i].visited is not False:
-        #             to_visit.append(self._cells[x][i])
-        # for y in range(i-1, i+2):
-        #     if -1 < y > self.num_rows + 1:
-        #         if self._cells[j][y].visited is not False:
-        #             to_visit.append(self._cells[j][y])
+        visited = []
+        for x in range(j-1, j+2):
+            if -1 < j < self.num_cols + 1:
+                if self._cells[x][i].visited is False:
+                    to_visit.append([x, i])
+        for y in range(i-1, i+2):
+            if -1 < y < self.num_rows + 1:
+                if self._cells[j][y].visited is False:
+                    to_visit.append([j,y])
+        self._cells[j][i].visited == True
+        visited.append([j, i])
+        if len(to_visit) > 1:
+            self._break_walls_r(*to_visit[random.randint(0, len(to_visit))])
+        else:
+            self._break_walls_r(*to_visit[0])
 
-        while -1 < j > self.num_cols + 1 and -1 < i > self.num_rows + 1:
-            self._cells[j][i].visited == True
+        # while -1 < j < self.num_cols + 1 and -1 < i < self.num_rows + 1:
+        #     self._cells[j][i].visited == True
+
             
