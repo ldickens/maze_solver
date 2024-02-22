@@ -179,10 +179,14 @@ class Maze():
         self._draw_cell()
 
     def _break_walls_r(self, i, j):
+        # break clause
         if i == self.num_rows and j == self.num_cols:
+            self._draw_cell()
             return
+        # search tracking lists
         to_visit = []
         visited = []
+        # find neighbours
         for x in range(j-1, j+2):
             if -1 < j < self.num_cols + 1:
                 if self._cells[x][i].visited is False:
@@ -191,14 +195,30 @@ class Maze():
             if -1 < y < self.num_rows + 1:
                 if self._cells[j][y].visited is False:
                     to_visit.append([j,y])
-        self._cells[j][i].visited == True
-        visited.append([j, i])
-        if len(to_visit) > 1:
-            self._break_walls_r(*to_visit[random.randint(0, len(to_visit))])
+        while len(to_visit) > 0:
+            # set visited of current
+            self._cells[j][i].visited == True
+            # add to search tracking list
+            visited.append([j, i])
+            # if neighbours exist randomly go to one of them.
+            target = to_visit[random.randint(0, len(to_visit) + 1)]
+            self.break_neighbour_wall((j,i), target)
+            self._break_walls_r(*target)
+        # no neighbours so draw and return
+        self._draw_cell()
+        return
+    
+    def break_neighbour_wall(self, cur_cell, neighbour_cell):
+        x1, y1 = cur_cell
+        xt, yt = neighbour_cell
+
+        if x1 - xt != 0:
+            if x1 - xt == 1:
+                self._cells[x1][y1].has_left_wall = False
+            else:
+                self._cells[x1][y1].has_right_wall = False
         else:
-            self._break_walls_r(*to_visit[0])
-
-        # while -1 < j < self.num_cols + 1 and -1 < i < self.num_rows + 1:
-        #     self._cells[j][i].visited == True
-
-            
+            if y1 - yt == 1:
+                self._cells[x1][y1].has_top_wall = False
+            else:
+                self._cells[x1][y1].has_bottom_wall = False
