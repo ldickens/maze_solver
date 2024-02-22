@@ -2,8 +2,8 @@ import ui
 
 app = ui.App()
 
-num_cols = 7
-num_rows = 6
-m2 = ui.Maze(10, 10, num_rows, num_cols, 80, 80, win=app.maze)
+num_cols = 13
+num_rows = 13
+m2 = ui.Maze(10, 10, num_rows, num_cols, 40, 40, win=app.maze)
 
 app.wait_for_close()

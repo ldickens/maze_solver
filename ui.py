@@ -141,6 +141,8 @@ class Maze():
         self._cells = []
         self._create_cells()
         self._break_entrance_and_exit()
+        self._break_walls_r(0,0)
+        self._reset_cells_visited()
 
     def _create_cells(self):
         for e, col in enumerate(range(self.num_cols)):
@@ -178,47 +180,58 @@ class Maze():
 
         self._draw_cell()
 
-    def _break_walls_r(self, i, j):
-        # break clause
-        if i == self.num_rows and j == self.num_cols:
-            self._draw_cell()
-            return
-        # search tracking lists
-        to_visit = []
-        visited = []
-        # find neighbours
-        for x in range(j-1, j+2):
-            if -1 < j < self.num_cols + 1:
-                if self._cells[x][i].visited is False:
-                    to_visit.append([x, i])
-        for y in range(i-1, i+2):
-            if -1 < y < self.num_rows + 1:
-                if self._cells[j][y].visited is False:
-                    to_visit.append([j,y])
-        while len(to_visit) > 0:
-            # set visited of current
-            self._cells[j][i].visited == True
-            # add to search tracking list
-            visited.append([j, i])
-            # if neighbours exist randomly go to one of them.
-            target = to_visit[random.randint(0, len(to_visit) + 1)]
-            self.break_neighbour_wall((j,i), target)
-            self._break_walls_r(*target)
-        # no neighbours so draw and return
-        self._draw_cell()
-        return
     
+    def _break_walls_r(self, i , j):
+        self._cells[j][i].visited = True
+
+        if i == self.num_rows-1 and j == self.num_cols-1:
+            return
+
+        while True:
+            to_visit = []
+            neighbours = 0
+            # check neighbours
+            for x in range(j-1, j+2):
+                if x > 0 and x <= self.num_cols-1:
+                    if self._cells[x][i].visited == False:
+                        to_visit.append([i,x])
+                        neighbours += 1
+            for y in range(i-1, i+2):
+                if y > 0 and y <= self.num_rows-1:
+                    if self._cells[j][y].visited == False:
+                        to_visit.append([y, j])
+                        neighbours += 1
+
+            if neighbours != 0:
+                # find next random direction, break walls and recursively call next cell
+                next_cell_idx = random.randint(0, neighbours - 1)
+                next_cell = to_visit[next_cell_idx]
+                self.break_neighbour_wall((i, j), next_cell)
+                self._break_walls_r(*next_cell)
+            else:
+                self._draw_cell()
+                return
+
     def break_neighbour_wall(self, cur_cell, neighbour_cell):
-        x1, y1 = cur_cell
-        xt, yt = neighbour_cell
+        y1, x1  = cur_cell
+        yt, xt = neighbour_cell
 
         if x1 - xt != 0:
             if x1 - xt == 1:
                 self._cells[x1][y1].has_left_wall = False
+                self._cells[xt][yt].has_right_wall = False
             else:
                 self._cells[x1][y1].has_right_wall = False
+                self._cells[xt][yt].has_left_wall = False
         else:
             if y1 - yt == 1:
                 self._cells[x1][y1].has_top_wall = False
+                self._cells[xt][yt].has_bottom_wall = False
             else:
                 self._cells[x1][y1].has_bottom_wall = False
+                self._cells[xt][yt].has_top_wall = False
+
+    def _reset_cells_visited(self):
+        for j in self._cells:
+            for i in j:
+                i.visited = False
