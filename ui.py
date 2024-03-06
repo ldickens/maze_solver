@@ -211,6 +211,46 @@ class Maze():
             else:
                 self._draw_cell()
                 return
+            
+    def solve_maze(self, i, j):
+        current = [j,i]
+        current.visited = True
+        history = {}
+
+        while True:
+            no_wall = self._check_walls(current)
+            if len(no_wall) > 0:
+                for dir in no_wall:
+                    if dir == 'left' and self._cells[j-1][i].visited == False:
+                        self._cells[j][i].draw_move(self._cells[j-1][i])
+                        history.update({[j-1, i]: current})
+
+                    if dir == 'right' and self._cells[j-1][i].visited == False:
+                        self._cells[j][i].draw_move(self._cells[j+1][i])
+                        history.update({[j+1, i]: current})
+
+                    if dir == 'top' and self._cells[j][i-1].visited == False:
+                        self._cells[j][i].draw_move(self._cells[j][i-1])
+                        history.update({[j, i-1]: current})
+
+                    if dir == 'bottom' and self._cells[j][i+1].visited == False:
+                        self._cells[j][i].draw_move(self._cells[j][i+1])
+                        history.update({[j, i+1]: current})
+            else:
+                self.solve_maze()
+                return
+            
+    def _check_walls(self, cell):
+        no_wall = []
+        if cell.has_left_wall == False:
+            no_wall.append('left')
+        if cell.has_right_wall == False:
+            no_wall.append('right')
+        if cell.has_top_wall == False:
+            no_wall.append('top')
+        if cell.has_bottom_wall == False:
+            no_wall.append('bottom')
+        return no_wall
 
     def break_neighbour_wall(self, cur_cell, neighbour_cell):
         y1, x1  = cur_cell
