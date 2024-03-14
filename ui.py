@@ -15,29 +15,35 @@ class App(Tk):
         self.title('Maze Solver')
         self.protocol('WM_DELETE_WINDOW', self.close)
 
-        self.maze = MazeDrawing(self)
+        self.maze = MazeDrawing(self, bg="white")
         self.maze.pack(fill=BOTH, expand=True)
 
-    def redraw(self):
-        self.update_idletasks()
-        self.update()
+    # def redraw(self):
+    #     self.update_idletasks()
+    #     self.update()
     
     def wait_for_close(self):
         self.running = True
         while self.running == True:
-            self.redraw()
+            self.maze.redraw()
 
     def close(self):
         self.running = False
 
-    def draw_line(self, line, fill_colour):
-        line.draw(self.maze, fill_colour)
 
 
 class MazeDrawing(Canvas):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
+        self.master = master
         self.configure(background='white')
+
+    def draw_line(self, line, fill_colour):
+        line.draw(self.maze, fill_colour)
+
+    def redraw(self):
+        self.master.update_idletasks()
+        self.master.update()
         
 class Point():
     def __init__(self, x, y):
@@ -115,7 +121,6 @@ class Cell():
         line = Line(this_point, to_cell_point)
         line.draw(self._win, colour)
 
-
 class Maze():
     def __init__(
             self,
@@ -143,6 +148,7 @@ class Maze():
         self._break_entrance_and_exit()
         self._break_walls_r(0,0)
         self._reset_cells_visited()
+        self.solve()
 
     def _create_cells(self):
         for e, col in enumerate(range(self.num_cols)):
@@ -163,7 +169,7 @@ class Maze():
 
     def _animate(self):
         self._win.redraw()
-        sleep(0.05)
+        sleep(0.01)
 
     def _break_entrance_and_exit(self):
         maze_entrance = self._cells[0][0]
@@ -211,34 +217,57 @@ class Maze():
             else:
                 self._draw_cell()
                 return
+
+    def solve(self):
+        return self.solve_maze(0,0)
             
     def solve_maze(self, i, j):
-        current = [j,i]
+        self._animate()
+        current = self._cells[j][i]
         current.visited = True
-        history = {}
 
-        while True:
-            no_wall = self._check_walls(current)
-            if len(no_wall) > 0:
-                for dir in no_wall:
-                    if dir == 'left' and self._cells[j-1][i].visited == False:
-                        self._cells[j][i].draw_move(self._cells[j-1][i])
-                        history.update({[j-1, i]: current})
+        if [j,i] == [self.num_cols - 1, self.num_rows - 1]:
+            return True
+        no_wall = self._check_walls(self._cells[j][i])
+        if len(no_wall) > 0:
+            for dir in no_wall:
+                if dir == 'left' and j != 0:
+                    target = self._cells[j-1][i]
+                    if target.visited != True:
+                        current.draw_move(target)
+                        if self.solve_maze(i, j-1) is True:
+                            return True
+                        else:
+                            current.draw_move(target, undo=True)
 
-                    if dir == 'right' and self._cells[j-1][i].visited == False:
-                        self._cells[j][i].draw_move(self._cells[j+1][i])
-                        history.update({[j+1, i]: current})
+                if dir == 'right' and j != self.num_cols:
+                    target = self._cells[j+1][i]
+                    if target.visited != True:
+                        current.draw_move(target)
+                        if self.solve_maze(i, j+1) is True:
+                            return True
+                        else:
+                            current.draw_move(target, undo=True)
 
-                    if dir == 'top' and self._cells[j][i-1].visited == False:
-                        self._cells[j][i].draw_move(self._cells[j][i-1])
-                        history.update({[j, i-1]: current})
+                if dir == 'top' and i != 0:
+                    target = self._cells[j][i-1]
+                    if target.visited != True:
+                        current.draw_move(target)
+                        if self.solve_maze(i-1, j) is True:
+                            return True
+                        else:
+                            current.draw_move(target, undo=True)
 
-                    if dir == 'bottom' and self._cells[j][i+1].visited == False:
-                        self._cells[j][i].draw_move(self._cells[j][i+1])
-                        history.update({[j, i+1]: current})
-            else:
-                self.solve_maze()
-                return
+                if dir == 'bottom' and i != self.num_rows:
+                    target = self._cells[j][i+1]
+                    if target.visited != True:
+                        current.draw_move(target)
+                        if self.solve_maze(i+1, j) is True:
+                            return True
+                        else:
+                            current.draw_move(target, undo=True)
+
+        return False
             
     def _check_walls(self, cell):
         no_wall = []
